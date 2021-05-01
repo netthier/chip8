@@ -36,11 +36,7 @@ async fn main() {
             WHITE,
             DrawTextureParams {
                 dest_size: Some(Vec2::new(screen_width(), screen_width() / 2.0)),
-                source: None,
-                rotation: 0.0,
-                flip_x: false,
-                flip_y: false,
-                pivot: None,
+                ..Default::default()
             },
         );
 
@@ -69,10 +65,10 @@ fn process_input(cpu: &mut Cpu) {
     ];
 
     for (idx, code) in key_codes.iter().enumerate() {
-        cpu.set_key(idx, is_key_pressed(*code));
+        cpu.set_key(idx, is_key_down(*code));
 
         // Special case for QWERTZ keyboards
-        if *code == KeyCode::Z && is_key_pressed(KeyCode::Y) {
+        if *code == KeyCode::Z && is_key_down(KeyCode::Y) {
             cpu.set_key(idx, true);
         }
     }
@@ -87,7 +83,7 @@ fn fb_to_img(img: &mut Image, fb: &[bool; 32 * 64]) {
                 if fb[y as usize * 64 + x as usize] {
                     WHITE
                 } else {
-                    Color::from_rgba(0, 0, 0, 200)
+                    Color::from_rgba(0, 0, 0, 0)
                 },
             )
         }
