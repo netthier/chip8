@@ -16,7 +16,7 @@ async fn main() {
 
     let mut cpu = Cpu::new();
 
-    cpu.init_mem(include_bytes!("../roms/TETRIS"));
+    cpu.init_mem(include_bytes!("../roms/VBRIX"));
 
     loop {
         for _ in 0..8 {
@@ -35,12 +35,20 @@ async fn main() {
             0.0,
             WHITE,
             DrawTextureParams {
-                dest_size: Some(Vec2::new(screen_width(), screen_width() / 2.0)),
+                dest_size: Some(vec2(get_dims().0, get_dims().1)),
                 ..Default::default()
             },
         );
 
         next_frame().await
+    }
+}
+
+fn get_dims() -> (f32, f32) {
+    if screen_width() / 2.0 > screen_height() {
+        (screen_height() * 2.0, screen_height())
+    } else {
+        (screen_width(), screen_width() / 2.0)
     }
 }
 
@@ -83,7 +91,7 @@ fn fb_to_img(img: &mut Image, fb: &[bool; 32 * 64]) {
                 if fb[y as usize * 64 + x as usize] {
                     WHITE
                 } else {
-                    Color::from_rgba(0, 0, 0, 0)
+                    Color::from_rgba(0, 0, 0, 255)
                 },
             )
         }
