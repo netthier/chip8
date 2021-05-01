@@ -155,6 +155,7 @@ impl Cpu {
 
     fn skip_eq_xkk(&mut self) {
         let args = self.get_args(ArgType::Xkk);
+
         if self.regs[args[0]] == args[1] as u8 {
             self.set_pc(PcMode::Skip);
         } else {
@@ -222,6 +223,8 @@ impl Cpu {
         self.regs[args[0]] = res;
         if wrap {
             self.regs[0xF] = 1;
+        } else {
+            self.regs[0xF] = 0;
         }
         self.set_pc(PcMode::Step);
     }
@@ -231,6 +234,8 @@ impl Cpu {
         let (res, wrap) = self.regs[args[0]].overflowing_sub(self.regs[args[1]]);
         self.regs[args[0]] = res;
         if wrap {
+            self.regs[0xF] = 0;
+        } else {
             self.regs[0xF] = 1;
         }
         self.set_pc(PcMode::Step);
@@ -296,7 +301,9 @@ impl Cpu {
 
     fn draw_xyn(&mut self) {
         let args = self.get_args(ArgType::Xyn);
-        let mut erased_flag = false;
+
+        self.regs[0xF] = 0;
+
         for i in 0..args[2] {
             let y = (self.regs[args[1]] + i as u8) as usize % 32;
             for j in 0..8 {
@@ -305,18 +312,14 @@ impl Cpu {
 
                 let idx = y * 64 + x;
 
-                if self.framebuffer[idx] && !(pixel ^ self.framebuffer[idx]) {
-                    erased_flag = true;
+                if self.framebuffer[idx] && pixel {
+                    self.regs[0xF] = 1;
                 }
 
                 self.framebuffer[idx] ^= pixel;
             }
         }
-        if erased_flag {
-            self.regs[0xF] = 1;
-        } else {
-            self.regs[0xF] = 0;
-        }
+
         self.set_pc(PcMode::Step);
     }
 
