@@ -7,3 +7,4 @@ Latest stable build available at: https://netthier.github.io/chip8/
 - [x] ~~Add a debugging UI~~
 - [x] ~~Add a CRT effect with shaders~~
 - [ ] Add Super CHIP support
+- [ ] Add more debugging features (modify registers, breakpoints, etc.)

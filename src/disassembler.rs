@@ -11,16 +11,16 @@ pub fn generate_disassembly(cpu: &mut Cpu, range: Range<usize>) -> String {
         let xyn = cpu.get_args_addr(ArgType::Xyn, pc);
         disassembly.push_str(format!("0x{:X}: ", pc).as_str());
         disassembly.push_str(&match nibbles {
-            [0x0, 0x0, 0xE, 0x0] => "cls".to_string(),
-            [0x0, 0x0, 0xE, 0xE] => "ret".to_string(),
-            [0x0, 0x0, 0xF, 0xA] => "compat".to_string(),
-            [0x1, _, _, _] => format!("JP 0x{:X}", nnn[0]),
-            [0x2, _, _, _] => format!("CALL 0x{:X}", nnn[0]),
-            [0x3, _, _, _] => format!("SE V{:X}, {:X}", xkk[0], xkk[1]),
-            [0x4, _, _, _] => format!("SNE V{:X}, 0x{:X}", xkk[0], xkk[1]),
+            [0x0, 0x0, 0xE, 0x0] => "CLS".to_string(),
+            [0x0, 0x0, 0xE, 0xE] => "RET".to_string(),
+            [0x0, 0x0, 0xF, 0xA] => "COMPAT".to_string(),
+            [0x1, _, _, _] => format!("JP 0x{:03X}", nnn[0]),
+            [0x2, _, _, _] => format!("CALL 0x{:03X}", nnn[0]),
+            [0x3, _, _, _] => format!("SE V{:X}, 0x{:02X}", xkk[0], xkk[1]),
+            [0x4, _, _, _] => format!("SNE V{:X}, 0x{:02X}", xkk[0], xkk[1]),
             [0x5, _, _, 0x0] => format!("SE V{:X}, V{:X}", xyn[0], xyn[1]),
-            [0x6, _, _, _] => format!("LD V{:X}, 0x{:X}", xkk[0], xkk[1]),
-            [0x7, _, _, _] => format!("ADD V{:X}, 0x{:X}", xkk[0], xkk[1]),
+            [0x6, _, _, _] => format!("LD V{:X}, 0x{:02X}", xkk[0], xkk[1]),
+            [0x7, _, _, _] => format!("ADD V{:X}, 0x{:02X}", xkk[0], xkk[1]),
             [0x8, _, _, 0x0] => format!("LD V{:X}, V{:X}", xyn[0], xyn[1]),
             [0x8, _, _, 0x1] => format!("OR V{:X}, V{:X}", xyn[0], xyn[1]),
             [0x8, _, _, 0x2] => format!("AND V{:X}, V{:X}", xyn[0], xyn[1]),
@@ -31,9 +31,9 @@ pub fn generate_disassembly(cpu: &mut Cpu, range: Range<usize>) -> String {
             [0x8, _, _, 0x7] => format!("SUBN V{:X}, V{:X}", xyn[0], xyn[1]),
             [0x8, _, _, 0xE] => format!("SHL V{:X}", xyn[0]),
             [0x9, _, _, 0x0] => format!("SNE V{:X}, V{:X}", xyn[0], xyn[1]),
-            [0xA, _, _, _] => format!("LD I, 0x{:X}", nnn[0]),
-            [0xB, _, _, _] => format!("JP 0x{:X} + V0", nnn[0]),
-            [0xC, _, _, _] => format!("RND V{:X}, 0x{:X}", xkk[0], xkk[1]),
+            [0xA, _, _, _] => format!("LD I, 0x{:03X}", nnn[0]),
+            [0xB, _, _, _] => format!("JP 0x{:03X} + V0", nnn[0]),
+            [0xC, _, _, _] => format!("RND V{:X}, 0x{:02X}", xkk[0], xkk[1]),
             [0xD, _, _, _] => format!("DRW V{:X}, V{:X}, 0x{:X}", xyn[0], xyn[1], xyn[2]),
             [0xE, _, 0x9, 0xE] => format!("SKP V{:X}", xyn[0]),
             [0xE, _, 0xA, 0x1] => format!("SKNP V{:X}", xyn[0]),
@@ -55,4 +55,19 @@ pub fn generate_disassembly(cpu: &mut Cpu, range: Range<usize>) -> String {
     }
 
     disassembly
+}
+
+pub fn highlight(disassembly: &str, line: usize) -> String {
+    disassembly
+        .lines()
+        .enumerate()
+        .map(|(idx, e)| {
+            if idx == line {
+                format!("> {}", e)
+            } else {
+                format!("  {}", e)
+            }
+        })
+        .collect::<Vec<String>>()
+        .join("\n")
 }

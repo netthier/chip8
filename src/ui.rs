@@ -2,7 +2,7 @@ use crate::roms::ROMS;
 use crate::State;
 
 use crate::cpu::Cpu;
-use crate::disassembler::generate_disassembly;
+use crate::disassembler::{generate_disassembly, highlight};
 use egui::menu::menu;
 
 pub struct MenuState {
@@ -61,19 +61,9 @@ pub fn show_menu(state: &mut State, menu_state: &mut MenuState) {
 pub fn show_debugger(debugger_state: &mut DebuggerState, cpu: &mut Cpu) {
     egui_macroquad::ui(|egui_ctx| {
         egui::Window::new("Debugger")
+            .scroll(true)
             .default_width(500.0)
             .show(egui_ctx, |ui| {
-                egui::CollapsingHeader::new("Disassembly")
-                    .default_open(true)
-                    .show(ui, |ui| {
-                        ui.monospace(generate_disassembly(cpu, cpu.pc..cpu.pc + 20));
-                    });
-                ui.separator();
-                egui::CollapsingHeader::new("Registers")
-                    .default_open(true)
-                    .show(ui, |ui| {
-                        ui.monospace(get_registers(&cpu));
-                    });
                 ui.checkbox(&mut debugger_state.running, "Run CPU");
                 ui.separator();
                 if !debugger_state.running && ui.button("Step").clicked() {
@@ -84,6 +74,48 @@ pub fn show_debugger(debugger_state: &mut DebuggerState, cpu: &mut Cpu) {
                         debugger_state.delay_counter = 0;
                     }
                 }
+                egui::CollapsingHeader::new("Disassembly")
+                    .default_open(true)
+                    .show(ui, |ui| {
+                        ui.monospace(highlight(
+                            &generate_disassembly(cpu, cpu.pc.saturating_sub(4)..cpu.pc + 20),
+                            2,
+                        ));
+                    });
+                ui.separator();
+                egui::CollapsingHeader::new("Registers")
+                    .default_open(true)
+                    .show(ui, |ui| {
+                        ui.monospace(get_registers(&cpu));
+                    });
+                egui::CollapsingHeader::new("Stack")
+                    .default_open(true)
+                    .show(ui, |ui| {
+                        ui.monospace({
+                            let mut stack = String::new();
+                            for (idx, elem) in cpu.stack.iter().enumerate().rev() {
+                                stack.push_str(format!("0x{:02X}: 0x{:03X}\n", idx, elem).as_str());
+                            }
+                            stack
+                        })
+                    });
+                egui::CollapsingHeader::new("Memory")
+                    .default_open(false)
+                    .show(ui, |ui| {
+                        ui.monospace({
+                            let mut memory = String::new();
+                            for (idx, line) in cpu.mem.chunks(16).enumerate() {
+                                memory.push_str(format!("0x{:03X}: ", idx * 16).as_str());
+                                for bytes in line.chunks(2) {
+                                    memory.push_str(
+                                        format!("{:02X}{:02X} ", bytes[0], bytes[1]).as_str(),
+                                    );
+                                }
+                                memory.push('\n');
+                            }
+                            memory
+                        });
+                    });
             });
     });
 }
@@ -91,18 +123,15 @@ pub fn show_debugger(debugger_state: &mut DebuggerState, cpu: &mut Cpu) {
 fn get_registers(cpu: &Cpu) -> String {
     let mut label = String::new();
     for (idx, reg) in cpu.regs.iter().enumerate() {
-        let mut str = format!("V{:X}: 0x{:X} ", idx, reg);
-        while str.len() < 13 {
-            str.push(' ');
-        }
+        let mut str = format!("V{:X}: 0x{:02X}  ", idx, reg);
         if (idx + 1) % 4 == 0 {
             str.push('\n');
         }
         label.push_str(&str);
     }
-    label.push_str(format!("PC: 0x{:X}\n", cpu.pc).as_str());
-    label.push_str(format!("I: 0x{:X}\n", cpu.reg_i).as_str());
-    label.push_str(format!("DT: 0x{:X}\n", cpu.reg_delay).as_str());
-    label.push_str(format!("ST: 0x{:X}\n", cpu.reg_sound).as_str());
+    label.push_str(format!("PC: 0x{:03X}\n", cpu.pc).as_str());
+    label.push_str(format!("I:  0x{:03X}\n", cpu.reg_i).as_str());
+    label.push_str(format!("DT: 0x{:02X}\n", cpu.reg_delay).as_str());
+    label.push_str(format!("ST: 0x{:02X}\n", cpu.reg_sound).as_str());
     label
 }

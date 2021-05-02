@@ -2,8 +2,8 @@ use macroquad::rand::gen_range;
 use std::ops::Range;
 
 pub struct Cpu {
-    mem: [u8; 0x1000],
-    stack: Vec<usize>,
+    pub mem: [u8; 0x1000],
+    pub stack: Vec<usize>,
 
     pub regs: [u8; 0x10],
     pub reg_i: usize,
