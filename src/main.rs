@@ -47,6 +47,8 @@ async fn main() {
             if let State::InGame(rom) = &state {
                 cpu = Cpu::new();
                 cpu.init_mem(&roms::get_bytes(rom));
+                cpu.st_compat = menu_state.load_store_compat;
+                cpu.sh_compat = menu_state.shift_compat;
             }
         } else {
             if is_key_pressed(KeyCode::Escape) {

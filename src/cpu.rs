@@ -14,8 +14,10 @@ pub struct Cpu {
     pub framebuffer: [bool; 32 * 64],
 
     pub keymap: [bool; 0x10],
+    block_release: bool,
 
     pub st_compat: bool,
+    pub sh_compat: bool,
 }
 
 pub enum ArgType {
@@ -52,8 +54,10 @@ impl Cpu {
             framebuffer: [false; 64 * 32],
 
             keymap: [false; 0x10],
+            block_release: false,
 
             st_compat: false,
+            sh_compat: false,
         }
     }
 
@@ -245,7 +249,13 @@ impl Cpu {
     fn shr_xy(&mut self) {
         let args = self.get_args(ArgType::Xyn);
 
-        let (res, wrap) = self.regs[args[1]].overflowing_shr(1);
+        let (res, wrap) = if self.sh_compat {
+            self.regs[args[0]]
+        } else {
+            self.regs[args[1]]
+        }
+        .overflowing_shr(1);
+
         self.regs[args[0]] = res & !0x80;
         if wrap {
             self.regs[0xF] = 1;
@@ -266,7 +276,13 @@ impl Cpu {
     fn shl_xy(&mut self) {
         let args = self.get_args(ArgType::Xyn);
 
-        let (res, wrap) = self.regs[args[1]].overflowing_shl(1);
+        let (res, wrap) = if self.sh_compat {
+            self.regs[args[0]]
+        } else {
+            self.regs[args[1]]
+        }
+        .overflowing_shl(1);
+
         self.regs[args[0]] = res & !0x1;
         if wrap {
             self.regs[0xF] = 1;
@@ -351,7 +367,10 @@ impl Cpu {
     fn block_key_x(&mut self) {
         let args = self.get_args(ArgType::Xyn);
         if self.keymap.iter().any(|e| *e) {
+            self.block_release = true;
             self.regs[args[0]] = self.keymap.iter().position(|e| *e).unwrap() as u8;
+        } else if self.block_release {
+            self.block_release = false;
             self.set_pc(PcMode::Step);
         }
     }
@@ -397,6 +416,7 @@ impl Cpu {
             self.mem[self.reg_i] = self.regs[idx];
             self.reg_i += 1;
         }
+
         if self.st_compat {
             self.reg_i -= args[0] + 1;
         }

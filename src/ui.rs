@@ -8,6 +8,8 @@ use egui::menu::menu;
 pub struct MenuState {
     selected: String,
     pub show_debugger: bool,
+    pub load_store_compat: bool,
+    pub shift_compat: bool,
 }
 
 pub struct DebuggerState {
@@ -20,6 +22,8 @@ impl Default for MenuState {
         Self {
             selected: "TETRIS".to_string(),
             show_debugger: false,
+            load_store_compat: false,
+            shift_compat: false,
         }
     }
 }
@@ -49,6 +53,8 @@ pub fn show_menu(state: &mut State, menu_state: &mut MenuState) {
                         }
                     });
                 ui.checkbox(&mut menu_state.show_debugger, "Enable Debugger");
+                ui.checkbox(&mut menu_state.load_store_compat, "Enable load/store compatibility mode. Required for some games, like CONNECT4 and TICTAC");
+                ui.checkbox(&mut menu_state.shift_compat, "Enable shift compatibility mode. Required for some games, like TICTAC");
                 ui.separator();
                 if ui.button("Start!").clicked() {
                     *state = State::InGame(menu_state.selected.clone());
