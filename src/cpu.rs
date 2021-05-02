@@ -1,23 +1,24 @@
 use macroquad::rand::gen_range;
+use std::ops::Range;
 
 pub struct Cpu {
     mem: [u8; 0x1000],
     stack: Vec<usize>,
 
-    regs: [u8; 0x10],
-    reg_i: usize,
-    reg_delay: u8,
-    reg_sound: u8,
-    pc: usize,
+    pub regs: [u8; 0x10],
+    pub reg_i: usize,
+    pub reg_delay: u8,
+    pub reg_sound: u8,
+    pub pc: usize,
 
-    framebuffer: [bool; 32 * 64],
+    pub framebuffer: [bool; 32 * 64],
 
-    keymap: [bool; 0x10],
+    pub keymap: [bool; 0x10],
 
-    st_compat: bool,
+    pub st_compat: bool,
 }
 
-enum ArgType {
+pub enum ArgType {
     Nnn,
     Xkk,
     Xyn,
@@ -80,7 +81,7 @@ impl Cpu {
     }
 
     pub fn step(&mut self) {
-        let nibbles = self.get_instr();
+        let nibbles = self.get_instr_addr(self.pc);
 
         match nibbles {
             [0x0, 0x0, 0xE, 0x0] => self.clear(),
@@ -422,9 +423,9 @@ impl Cpu {
         }
     }
 
-    fn get_instr(&self) -> [u8; 4] {
-        let high = self.mem[self.pc];
-        let low = self.mem[self.pc + 1];
+    pub fn get_instr_addr(&self, addr: usize) -> [u8; 4] {
+        let high = self.mem[addr];
+        let low = self.mem[addr + 1];
 
         [
             (high & 0xF0) >> 4,
@@ -435,10 +436,14 @@ impl Cpu {
     }
 
     fn get_args(&self, arg_type: ArgType) -> [usize; 3] {
+        self.get_args_addr(arg_type, self.pc)
+    }
+
+    pub fn get_args_addr(&self, arg_type: ArgType, addr: usize) -> [usize; 3] {
         let mut args = [0, 0, 0];
 
-        let high = self.mem[self.pc] as usize;
-        let low = self.mem[self.pc + 1] as usize;
+        let high = self.mem[addr] as usize;
+        let low = self.mem[addr + 1] as usize;
 
         match arg_type {
             ArgType::Nnn => {
@@ -459,7 +464,7 @@ impl Cpu {
     }
 
     fn unimpl_panic(&self) {
-        let n = self.get_instr();
+        let n = self.get_instr_addr(self.pc);
         println!(
             "Unimplemented instruction: {:X}{:X}{:X}{:X}",
             n[0], n[1], n[2], n[3]

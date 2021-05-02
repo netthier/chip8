@@ -1,8 +1,9 @@
 use crate::cpu::Cpu;
-use crate::ui::{show_menu, MenuState};
+use crate::ui::{show_menu, DebuggerState, MenuState};
 use macroquad::prelude::*;
 
 mod cpu;
+mod disassembler;
 mod roms;
 mod ui;
 
@@ -37,6 +38,7 @@ async fn main() {
 
     let mut state = State::Menu;
     let mut menu_state = MenuState::default();
+    let mut debugger_state = DebuggerState::default();
 
     loop {
         if state == State::Menu {
@@ -51,11 +53,14 @@ async fn main() {
                 state = State::Menu;
             }
 
-            for _ in 0..8 {
-                cpu.step();
+            if debugger_state.running {
+                // At 60fps, this basically results in a CPU speed of 480Hz
+                for _ in 0..8 {
+                    cpu.step();
+                }
+                cpu.dec_regs();
             }
 
-            cpu.dec_regs();
             process_input(&mut cpu);
 
             fb_to_img(&mut buffer, &cpu.get_framebuffer());
@@ -85,6 +90,11 @@ async fn main() {
             );
 
             gl_use_default_material();
+
+            if menu_state.show_debugger {
+                ui::show_debugger(&mut debugger_state, &mut cpu);
+                egui_macroquad::draw();
+            }
         }
         next_frame().await
     }
