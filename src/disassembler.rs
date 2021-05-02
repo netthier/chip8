@@ -46,7 +46,10 @@ pub fn generate_disassembly(cpu: &mut Cpu, range: Range<usize>) -> String {
             [0xF, _, 0x3, 0x3] => format!("LD B, V{:X}", xyn[0]),
             [0xF, _, 0x5, 0x5] => format!("LD [I], V{:X}", xyn[0]),
             [0xF, _, 0x6, 0x5] => format!("LD V{:X}, [I]", xyn[0]),
-            _ => format!("0x{}{}{}{}", nibbles[0], nibbles[1], nibbles[2], nibbles[3]),
+            _ => format!(
+                "0x{:X}{:X}{:X}{:X}",
+                nibbles[0], nibbles[1], nibbles[2], nibbles[3]
+            ),
         });
         disassembly.push('\n');
     }
