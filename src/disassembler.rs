@@ -2,10 +2,6 @@ use crate::cpu::{ArgType, Cpu};
 use std::ops::Range;
 
 pub fn generate_disassembly(cpu: &mut Cpu, range: Range<usize>) -> String {
-    if range.start % 2 == 1 {
-        panic!("Tried to disassemble odd memory location");
-    }
-
     let mut disassembly = String::new();
     for pc in range.collect::<Vec<usize>>().chunks(2) {
         let pc = pc[0];
