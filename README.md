@@ -5,5 +5,5 @@ Latest stable build available at: https://netthier.github.io/chip8/
 - [ ] Add ROM selection (Currently loads TETRIS by default)
 - [ ] Add sound support
 - [ ] Add a debugging UI
-- [ ] Add a CRT effect with shaders
+- [x] ~~Add a CRT effect with shaders~~
 - [ ] Add Super CHIP support

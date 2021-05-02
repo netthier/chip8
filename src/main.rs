@@ -1,10 +1,19 @@
 use crate::cpu::Cpu;
+use crate::ui::show_menu;
 use macroquad::prelude::*;
 
 mod cpu;
+mod ui;
 
 #[macroquad::main("CHIP-8 EMU")]
 async fn main() {
+    let material = load_material(
+        include_str!("CRT_shader.vert"),
+        include_str!("CRT_shader.frag"),
+        MaterialParams::default(),
+    )
+    .unwrap();
+
     let mut buffer = Image {
         width: 64,
         height: 32,
@@ -14,9 +23,12 @@ async fn main() {
     let texture = Texture2D::from_image(&buffer);
     texture.set_filter(FilterMode::Nearest);
 
+    let target = render_target(68, 36);
+    target.texture.set_filter(FilterMode::Nearest);
+
     let mut cpu = Cpu::new();
 
-    cpu.init_mem(include_bytes!("../roms/VBRIX"));
+    cpu.init_mem(include_bytes!("../roms/BRIX"));
 
     loop {
         for _ in 0..8 {
@@ -29,16 +41,30 @@ async fn main() {
         fb_to_img(&mut buffer, &cpu.get_framebuffer());
         texture.update(&buffer);
 
+        set_camera(&Camera2D {
+            render_target: Some(target),
+            ..Camera2D::from_display_rect(Rect::new(0.0, 0.0, 68.0, 36.0))
+        });
+
+        draw_texture(texture, 2.0, 2.0, WHITE);
+
+        set_default_camera();
+
+        gl_use_material(material);
+
         draw_texture_ex(
-            texture,
+            target.texture,
             0.0,
             0.0,
             WHITE,
             DrawTextureParams {
                 dest_size: Some(vec2(get_dims().0, get_dims().1)),
+                flip_y: true,
                 ..Default::default()
             },
         );
+
+        gl_use_default_material();
 
         next_frame().await
     }
@@ -91,7 +117,7 @@ fn fb_to_img(img: &mut Image, fb: &[bool; 32 * 64]) {
                 if fb[y as usize * 64 + x as usize] {
                     WHITE
                 } else {
-                    Color::from_rgba(0, 0, 0, 255)
+                    Color::from_rgba(0, 0, 0, 64)
                 },
             )
         }
