@@ -1362,6 +1362,7 @@ dependencies = [
  "egui",
  "egui-macroquad",
  "macroquad",
+ "quad-url",
 ]
 
 [[package]]
