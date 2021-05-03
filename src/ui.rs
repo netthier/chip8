@@ -3,13 +3,15 @@ use crate::State;
 
 use crate::cpu::Cpu;
 use crate::disassembler::{generate_disassembly, highlight};
-use egui::menu::menu;
 
 pub struct MenuState {
     selected: String,
+    show_about: bool,
     pub show_debugger: bool,
     pub load_store_compat: bool,
     pub shift_compat: bool,
+    pub alpha: u8,
+    pub crt_shader: bool,
 }
 
 pub struct DebuggerState {
@@ -21,9 +23,12 @@ impl Default for MenuState {
     fn default() -> Self {
         Self {
             selected: "TETRIS".to_string(),
+            show_about: false,
             show_debugger: false,
             load_store_compat: false,
             shift_compat: false,
+            alpha: 64,
+            crt_shader: true,
         }
     }
 }
@@ -43,8 +48,19 @@ pub fn show_menu(state: &mut State, menu_state: &mut MenuState) {
             .default_width(500.0)
             .show(egui_ctx, |ui| {
                 ui.label("Welcome to nett_hier's WASM CHIP-8 emulator");
+                if ui.button("About").clicked() {
+                    menu_state.show_about = true;
+                }
+                if menu_state.show_about {
+                    egui::Window::new("About").show(egui_ctx, |ui| {
+                        ui.label("This is a CHIP-8 emulator written in Rust and compiled to WASM, licensed under the AGPLv3.");
+                        ui.label("It comes preloaded with 23 public-domain roms.");
+                        ui.label("It uses macroquad for rendering and user input, and egui for the GUI.");
+                        ui.add(egui::Hyperlink::new("https://github.com/netthier/chip8").text("Link to the GitHub repository."));
+                    });
+                }
                 ui.separator();
-                egui::ComboBox::from_label("Select a game!")
+                egui::ComboBox::from_label("Select a game...")
                     .width(128.0)
                     .selected_text(&menu_state.selected)
                     .show_ui(ui, |ui| {
@@ -56,10 +72,15 @@ pub fn show_menu(state: &mut State, menu_state: &mut MenuState) {
                 ui.checkbox(&mut menu_state.load_store_compat, "Enable load/store compatibility mode. Required for some games, like CONNECT4 and TICTAC");
                 ui.checkbox(&mut menu_state.shift_compat, "Enable shift compatibility mode. Required for some games, like TICTAC");
                 ui.separator();
+                ui.add(egui::Slider::new(&mut menu_state.alpha, 0..=255).text("Alpha value of black pixels. Lower values reduce flickering but introduce ghosting."));
+                ui.checkbox(&mut menu_state.crt_shader, "Enable CRT shader");
+                ui.separator();
                 if ui.button("Start!").clicked() {
                     *state = State::InGame(menu_state.selected.clone());
                 }
                 ui.label("Once in game, press Esc to return to the menu.");
+                ui.separator();
+                ui.monospace("Controls:\nCHIP-8     Emu\n1 2 3 C    1 2 3 4\n4 5 6 D    Q W E R\n7 8 9 E    A S D F\nA 0 B F    Z/Y X C V");
             });
     });
 }

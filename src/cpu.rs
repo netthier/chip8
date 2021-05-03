@@ -1,5 +1,4 @@
 use macroquad::rand::gen_range;
-use std::ops::Range;
 
 pub struct Cpu {
     pub mem: [u8; 0x1000],
@@ -66,7 +65,7 @@ impl Cpu {
             self.mem[idx] = *byte;
         }
 
-        for (idx, byte) in rom.into_iter().enumerate() {
+        for (idx, byte) in rom.iter().enumerate() {
             self.mem[0x200 + idx] = *byte;
         }
     }

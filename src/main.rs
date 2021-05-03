@@ -42,7 +42,7 @@ async fn main() {
 
     loop {
         if state == State::Menu {
-            ui::show_menu(&mut state, &mut menu_state);
+            show_menu(&mut state, &mut menu_state);
             egui_macroquad::draw();
             if let State::InGame(rom) = &state {
                 cpu = Cpu::new();
@@ -65,7 +65,7 @@ async fn main() {
 
             process_input(&mut cpu);
 
-            fb_to_img(&mut buffer, &cpu.get_framebuffer());
+            fb_to_img(&mut buffer, &cpu.get_framebuffer(), menu_state.alpha);
             texture.update(&buffer);
 
             set_camera(&Camera2D {
@@ -77,7 +77,9 @@ async fn main() {
 
             set_default_camera();
 
-            gl_use_material(material);
+            if menu_state.crt_shader {
+                gl_use_material(material);
+            }
 
             draw_texture_ex(
                 target.texture,
@@ -140,7 +142,7 @@ fn process_input(cpu: &mut Cpu) {
     }
 }
 
-fn fb_to_img(img: &mut Image, fb: &[bool; 32 * 64]) {
+fn fb_to_img(img: &mut Image, fb: &[bool; 32 * 64], alpha: u8) {
     for y in 0..32 {
         for x in 0..64 {
             img.set_pixel(
@@ -149,7 +151,7 @@ fn fb_to_img(img: &mut Image, fb: &[bool; 32 * 64]) {
                 if fb[y as usize * 64 + x as usize] {
                     WHITE
                 } else {
-                    Color::from_rgba(0, 0, 0, 64)
+                    Color::from_rgba(0, 0, 0, alpha)
                 },
             )
         }
