@@ -76,7 +76,7 @@ impl Cpu {
 
     pub fn dec_regs(&mut self) {
         self.reg_delay = self.reg_delay.saturating_sub(1);
-        self.reg_sound -= self.reg_sound.saturating_sub(1);
+        self.reg_sound = self.reg_sound.saturating_sub(1);
     }
 
     pub fn set_key(&mut self, key: usize, value: bool) {
